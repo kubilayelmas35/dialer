@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WebRTC Dialer</title>
+  <script src="https://unpkg.com/@twilio/voice-sdk@latest/dist/twilio.min.js"
+          onload="console.log('Twilio SDK yüklendi')"
+          onerror="console.error('Twilio SDK yüklenemedi!')"></script>
+</head>
+<body>
+  <h2>WebRTC Dialer</h2>
+  <input type="text" id="phoneNumber" placeholder="+4915123456789" />
+  <button id="callBtn">Ara</button>
+  <button id="hangupBtn">Bitir</button>
+
+  <script>
+  let device;
+
+  // Sayfa açıldığında mikrofon izni sor
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then((stream) => {
+      console.log("Mikrofon izni verildi");
+      stream.getTracks().forEach(track => track.stop()); // Kullanımı hemen kapatıyoruz
+    })
+    .catch((err) => {
+      console.error("Mikrofon izni reddedildi:", err);
+      alert("Lütfen arama yapabilmek için mikrofon izni verin!");
+    });
+
+  // Twilio tokeni al
+  async function getToken() {
+      try {
+          const res = await fetch("https://gettoken-1651.twil.io/path_1");
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          const data = await res.json();
+          return data.token;
+      } catch (err) {
+          console.error("Token alınamadı:", err);
+          alert("Token alınamadı! Konsolu kontrol edin.");
+      }
+  }
+
+  // Arama başlat
+  document.getElementById('callBtn').onclick = async () => {
+      if (typeof Twilio === "undefined") {
+          alert("Twilio SDK yüklenmedi!");
+          return;
+      }
+
+      if (!device) {
+          const token = await getToken();
+          if (!token) return;
+
+          device = new Twilio.Device(token, {
+              codecPreferences: ["opus", "pcmu"],
+              fakeLocalDTMF: true
+          });
+
+          device.on('ready', () => console.log('Twilio Device ready'));
+          device.on('error', (err) => console.error('Device error:', err));
+          device.on('connect', () => console.log('Arama başladı'));
+          device.on('disconnect', () => console.log('Arama sona erdi'));
+      }
+
+      const number = document.getElementById('phoneNumber').value;
+      if (!number) {
+          alert("Lütfen aramak için bir numara girin!");
+          return;
+      }
+
+      device.connect({ To: number });
+  };
+
+  // Aramayı sonlandır
+  document.getElementById('hangupBtn').onclick = () => {
+      if (device) device.disconnectAll();
+  };
+  </script>
+</body>
+</html>
