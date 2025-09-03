@@ -7,7 +7,7 @@
 </head>
 <body>
   <h2>Trial Dialer</h2>
-  <input type="text" id="phoneNumber" placeholder="Aranacak Verified numara" />
+  <input type="text" id="phoneNumber" placeholder="Verified arama numarası +90..." />
   <button id="callBtn">Ara</button>
   <button id="hangupBtn">Bitir</button>
 
@@ -25,7 +25,7 @@
         const data = await res.json();
         return data.token;
       } catch(err) {
-        console.error(err);
+        console.error("Token alınamadı:", err);
         alert("Token alınamadı!");
       }
     }
@@ -42,9 +42,9 @@
         device = new Twilio.Device(token, { codecPreferences:["opus","pcmu"] });
 
         device.on('ready', () => console.log("Device hazır"));
-        device.on('error', err => console.error(err));
-        device.on('connect', () => console.log("Arama başladı"));
-        device.on('disconnect', () => console.log("Arama sona erdi"));
+        device.on('error', err => console.error("Device error:", err));
+        device.on('connect', conn => console.log("Arama başladı:", conn));
+        device.on('disconnect', conn => console.log("Arama sona erdi:", conn));
       }
 
       // Aramayı başlat
