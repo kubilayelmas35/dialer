@@ -20,7 +20,7 @@
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then((stream) => {
       console.log("Mikrofon izni verildi");
-      stream.getTracks().forEach(track => track.stop()); // Kullanımı hemen kapatıyoruz
+      stream.getTracks().forEach(track => track.stop());
     })
     .catch((err) => {
       console.error("Mikrofon izni reddedildi:", err);
@@ -53,21 +53,25 @@
 
           device = new Twilio.Device(token, {
               codecPreferences: ["opus", "pcmu"],
-              fakeLocalDTMF: true
+              fakeLocalDTMF: true,
+              edge: "frankfurt"
           });
 
-          device.on('ready', () => console.log('Twilio Device ready'));
+          device.on('ready', () => console.log('Twilio Device hazır'));
           device.on('error', (err) => console.error('Device error:', err));
           device.on('connect', () => console.log('Arama başladı'));
           device.on('disconnect', () => console.log('Arama sona erdi'));
       }
 
       const number = document.getElementById('phoneNumber').value;
+      console.log("Aranacak numara:", number);
+
       if (!number) {
           alert("Lütfen aramak için bir numara girin!");
           return;
       }
 
+      // Aramayı başlat
       device.connect({ To: number });
   };
 
