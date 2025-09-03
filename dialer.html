@@ -2,75 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>WebRTC Dialer</title>
-  <script src="https://unpkg.com/@twilio/voice-sdk@latest/dist/twilio.min.js"
-          onload="console.log('Twilio SDK yüklendi')"
-          onerror="console.error('Twilio SDK yüklenemedi!')"></script>
+  <title>Twilio Trial Dialer</title>
+  <script src="https://unpkg.com/@twilio/voice-sdk@latest/dist/twilio.min.js"></script>
 </head>
 <body>
-  <h2>WebRTC Dialer</h2>
-  <input type="text" id="phoneNumber" placeholder="+4915123456789" />
+  <h2>Trial Dialer</h2>
+  <input type="text" id="phoneNumber" placeholder="Aranacak Verified numara" />
   <button id="callBtn">Ara</button>
   <button id="hangupBtn">Bitir</button>
 
   <script>
-  let device;
+    let device;
 
-  // Mikrofon izni sor
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => stream.getTracks().forEach(track => track.stop()))
-    .catch(err => {
-      console.error("Mikrofon izni reddedildi:", err);
-      alert("Lütfen mikrofon izni verin!");
-    });
+    // Mikrofon izni sor
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => stream.getTracks().forEach(track => track.stop()))
+      .catch(err => alert("Lütfen mikrofon izni verin!"));
 
-  // Twilio tokeni al
-  async function getToken() {
+    async function getToken() {
       try {
-          const res = await fetch("https://gettoken-1651.twil.io/path_1");
-          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-          const data = await res.json();
-          return data.token;
-      } catch (err) {
-          console.error("Token alınamadı:", err);
-          alert("Token alınamadı!");
+        const res = await fetch("https://gettoken-1651.twil.io/path_1");
+        const data = await res.json();
+        return data.token;
+      } catch(err) {
+        console.error(err);
+        alert("Token alınamadı!");
       }
-  }
+    }
 
-  // Arama başlat
-  document.getElementById('callBtn').onclick = async () => {
+    document.getElementById('callBtn').onclick = async () => {
       const number = document.getElementById('phoneNumber').value.trim();
+      if (!number) { alert("Numara girin!"); return; }
       console.log("Aranacak numara:", number);
 
-      if (!number) {
-          alert("Lütfen bir numara girin!");
-          return;
-      }
-
       if (!device) {
-          const token = await getToken();
-          if (!token) return;
+        const token = await getToken();
+        if (!token) return;
 
-          device = new Twilio.Device(token, {
-              codecPreferences: ["opus", "pcmu"],
-              fakeLocalDTMF: true,
-              edge: "frankfurt"
-          });
+        device = new Twilio.Device(token, { codecPreferences:["opus","pcmu"] });
 
-          device.on('ready', () => console.log('Twilio Device hazır'));
-          device.on('error', err => console.error('Device error:', err));
-          device.on('connect', () => console.log('Arama başladı'));
-          device.on('disconnect', () => console.log('Arama sona erdi'));
+        device.on('ready', () => console.log("Device hazır"));
+        device.on('error', err => console.error(err));
+        device.on('connect', () => console.log("Arama başladı"));
+        device.on('disconnect', () => console.log("Arama sona erdi"));
       }
 
-      // GET param + POST param garanti
+      // Aramayı başlat
       device.connect({ To: number });
-  };
+    };
 
-  // Aramayı sonlandır
-  document.getElementById('hangupBtn').onclick = () => {
-      if (device) device.disconnectAll();
-  };
+    document.getElementById('hangupBtn').onclick = () => {
+      if(device) device.disconnectAll();
+    };
   </script>
 </body>
 </html>
