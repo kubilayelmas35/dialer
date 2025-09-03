@@ -16,15 +16,12 @@
   <script>
   let device;
 
-  // Sayfa açıldığında mikrofon izni sor
+  // Mikrofon izni sor
   navigator.mediaDevices.getUserMedia({ audio: true })
-    .then((stream) => {
-      console.log("Mikrofon izni verildi");
-      stream.getTracks().forEach(track => track.stop());
-    })
-    .catch((err) => {
+    .then(stream => stream.getTracks().forEach(track => track.stop()))
+    .catch(err => {
       console.error("Mikrofon izni reddedildi:", err);
-      alert("Lütfen arama yapabilmek için mikrofon izni verin!");
+      alert("Lütfen mikrofon izni verin!");
     });
 
   // Twilio tokeni al
@@ -36,14 +33,17 @@
           return data.token;
       } catch (err) {
           console.error("Token alınamadı:", err);
-          alert("Token alınamadı! Konsolu kontrol edin.");
+          alert("Token alınamadı!");
       }
   }
 
   // Arama başlat
   document.getElementById('callBtn').onclick = async () => {
-      if (typeof Twilio === "undefined") {
-          alert("Twilio SDK yüklenmedi!");
+      const number = document.getElementById('phoneNumber').value.trim();
+      console.log("Aranacak numara:", number);
+
+      if (!number) {
+          alert("Lütfen bir numara girin!");
           return;
       }
 
@@ -58,20 +58,12 @@
           });
 
           device.on('ready', () => console.log('Twilio Device hazır'));
-          device.on('error', (err) => console.error('Device error:', err));
+          device.on('error', err => console.error('Device error:', err));
           device.on('connect', () => console.log('Arama başladı'));
           device.on('disconnect', () => console.log('Arama sona erdi'));
       }
 
-      const number = document.getElementById('phoneNumber').value;
-      console.log("Aranacak numara:", number);
-
-      if (!number) {
-          alert("Lütfen aramak için bir numara girin!");
-          return;
-      }
-
-      // Aramayı başlat
+      // GET param + POST param garanti
       device.connect({ To: number });
   };
 
